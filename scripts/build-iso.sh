@@ -28,7 +28,12 @@ mkdir -p "${WORK}" "${ISO_TREE}" "${ROOT}/dist"
 
 curl --fail --location --retry 5 -o "${SOURCE}" "${MIRROR}/${MINT_ISO}"
 curl --fail --location --retry 5 -o "${WORK}/sha256sum.txt" "${MIRROR}/sha256sum.txt"
-grep " ${MINT_ISO}$" "${WORK}/sha256sum.txt" > "${WORK}/expected.sha256"
+if ! awk -v iso="${MINT_ISO}" '$2 == iso || $2 == "*" iso { print }' \
+  "${WORK}/sha256sum.txt" > "${WORK}/expected.sha256" || \
+  [[ ! -s "${WORK}/expected.sha256" ]]; then
+  echo "ERROR: ${MINT_ISO} was not found in the official Linux Mint checksum file." >&2
+  exit 1
+fi
 (cd "${WORK}" && sha256sum --check expected.sha256)
 
 xorriso -osirrox on -indev "${SOURCE}" -extract / "${ISO_TREE}"
@@ -43,11 +48,17 @@ install -Dm0644 "${ROOT}/assets/exp-mint-mark.svg" \
 
 convert -background none "${ROOT}/assets/exp-mint-mark.svg" -resize 210x210 \
   "${SQUASH_ROOT}/usr/share/plymouth/themes/exp-mint/logo.png"
+convert -background none "${ROOT}/assets/exp-mint-mark.svg" -resize 256x256 \
+  "${SQUASH_ROOT}/etc/calamares/branding/exp-mint/exp-mint-logo.png"
+convert "${ROOT}/assets/exp-mint-wallpaper.png" -resize '1280x720^' \
+  -gravity center -extent 1280x720 \
+  "${SQUASH_ROOT}/etc/calamares/branding/exp-mint/exp-mint-welcome.png"
 convert "${ROOT}/assets/exp-mint-wallpaper.png" -resize '1024x768^' -gravity center -extent 1024x768 \
   "${SQUASH_ROOT}/boot/grub/themes/exp-mint/background.png"
 convert -size 8x36 xc:'#69e6a4' "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_c.png"
 cp "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_c.png" "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_w.png"
 cp "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_c.png" "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_e.png"
+chmod +x "${SQUASH_ROOT}/etc/skel/Desktop/exp-mint-installer.desktop"
 
 cp -a "${SQUASH_ROOT}/boot/grub/themes/exp-mint" "${ISO_TREE}/boot/grub/themes/"
 cp "${SQUASH_ROOT}/boot/grub/themes/exp-mint/background.png" "${ISO_TREE}/boot/grub/exp-mint-background.png"
@@ -62,8 +73,32 @@ mount --bind /dev/pts "${SQUASH_ROOT}/dev/pts"
 mount -t proc proc "${SQUASH_ROOT}/proc"
 mount -t sysfs sys "${SQUASH_ROOT}/sys"
 cp /etc/resolv.conf "${SQUASH_ROOT}/etc/resolv.conf"
+chroot "${SQUASH_ROOT}" apt-get update
+chroot "${SQUASH_ROOT}" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+  apt-get install -y --no-install-recommends calamares calamares-settings-lubuntu
+
+# Keep Ubuntu's maintained Noble installer module wiring, but use EXP Mint's
+# identity and artwork. This avoids fragile hand-written partition recipes.
+if [[ -f "${SQUASH_ROOT}/etc/calamares/settings.conf" ]]; then
+  sed -Ei 's/^([[:space:]]*branding:[[:space:]]*).*/\1exp-mint/' \
+    "${SQUASH_ROOT}/etc/calamares/settings.conf"
+else
+  echo "ERROR: Calamares installed without /etc/calamares/settings.conf." >&2
+  exit 1
+fi
+
+# Remove the old Linux Mint live-installer launchers so there is one clear path.
+find "${SQUASH_ROOT}/usr/share/applications" "${SQUASH_ROOT}/etc/skel/Desktop" \
+  -type f -name '*.desktop' -print0 2>/dev/null | while IFS= read -r -d '' desktop; do
+    if grep -Eqi '(^Name=.*Install Linux Mint|live-installer|ubiquity)' "${desktop}"; then
+      rm -f "${desktop}"
+    fi
+  done
+
 chroot "${SQUASH_ROOT}" plymouth-set-default-theme -R exp-mint
 chroot "${SQUASH_ROOT}" update-grub || true
+chroot "${SQUASH_ROOT}" apt-get clean
+rm -rf "${SQUASH_ROOT}/var/lib/apt/lists/"*
 cleanup
 
 rm -f "${ISO_TREE}/casper/filesystem.squashfs"

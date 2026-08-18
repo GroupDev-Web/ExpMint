@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install EXP Mint
+Comment=Install EXP Mint on this computer
+Exec=pkexec calamares -d
+Icon=exp-mint
+Terminal=false
+Categories=System;
+StartupNotify=true

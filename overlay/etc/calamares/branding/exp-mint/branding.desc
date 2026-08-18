@@ -1,0 +1,26 @@
+---
+componentName: exp-mint
+
+strings:
+  productName: EXP Mint
+  shortProductName: EXP Mint
+  version: 22.3
+  shortVersion: 22.3
+  versionedName: EXP Mint 22.3
+  shortVersionedName: EXP Mint 22.3
+  bootloaderEntryName: EXP Mint
+  productUrl: https://github.com/GroupDev-Web/ExpMint
+  supportUrl: https://github.com/GroupDev-Web/ExpMint/issues
+  releaseNotesUrl: https://github.com/GroupDev-Web/ExpMint/releases
+
+images:
+  productLogo: exp-mint-logo.png
+  productIcon: exp-mint-logo.png
+  productWelcome: exp-mint-welcome.png
+
+slideshow: show.qml
+
+style:
+  sidebarBackground: "#07110d"
+  sidebarText: "#dff7e9"
+  sidebarTextSelect: "#9fffd0"
