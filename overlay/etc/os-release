@@ -1,0 +1,11 @@
+NAME="EXP Mint"
+VERSION="22.3 (Zena)"
+ID=exp-mint
+ID_LIKE="linuxmint ubuntu debian"
+PRETTY_NAME="EXP Mint 22.3"
+VERSION_ID="22.3"
+VERSION_CODENAME=zena
+UBUNTU_CODENAME=noble
+HOME_URL="https://github.com/GroupDev-Web/ExpMint"
+SUPPORT_URL="https://github.com/GroupDev-Web/ExpMint/issues"
+BUG_REPORT_URL="https://github.com/GroupDev-Web/ExpMint/issues"

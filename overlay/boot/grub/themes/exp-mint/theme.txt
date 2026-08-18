@@ -1,0 +1,24 @@
+title-text: "EXP Mint"
+title-font: "DejaVu Sans Bold 28"
+title-color: "#9fffd0"
+desktop-image: "background.png"
+desktop-color: "#07110d"
+terminal-font: "DejaVu Sans Mono 14"
+terminal-box: "0 0 0 0"
+terminal-left: "8%"
+terminal-top: "68%"
+terminal-width: "84%"
+terminal-height: "22%"
++ boot_menu {
+  left = 10%
+  top = 22%
+  width = 48%
+  height = 38%
+  item_font = "DejaVu Sans 16"
+  item_color = "#d9eee3"
+  selected_item_color = "#07110d"
+  selected_item_pixmap_style = "select_*.png"
+  item_height = 36
+  item_padding = 8
+  item_spacing = 4
+}

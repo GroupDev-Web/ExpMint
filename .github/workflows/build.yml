@@ -1,0 +1,66 @@
+name: Build EXP Mint ISO
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - '.github/workflows/build.yml'
+      - 'assets/**'
+      - 'overlay/**'
+      - 'scripts/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: exp-mint-iso-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free runner disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: false
+
+      - name: Install ISO tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl xorriso squashfs-tools rsync imagemagick \
+            grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common mtools
+
+      - name: Build EXP Mint
+        run: sudo --preserve-env=GITHUB_WORKSPACE ./scripts/build-iso.sh
+
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: exp-mint-22.3-xfce-amd64
+          path: |
+            dist/*.iso
+            dist/*.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.iso
+            dist/*.sha256
+          generate_release_notes: true

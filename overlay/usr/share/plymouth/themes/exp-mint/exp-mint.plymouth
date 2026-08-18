@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=EXP Mint
+Description=EXP Mint boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/exp-mint
+ScriptFile=/usr/share/plymouth/themes/exp-mint/exp-mint.script
