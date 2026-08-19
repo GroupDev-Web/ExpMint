@@ -2,14 +2,19 @@
 set -Eeuo pipefail
 
 MINT_VERSION="${MINT_VERSION:-22.3}"
-MINT_ISO="linuxmint-${MINT_VERSION}-xfce-64bit.iso"
+MINT_EDITION="${MINT_EDITION:-xfce}"
+case "${MINT_EDITION}" in
+  xfce|mate|cinnamon) ;;
+  *) echo "ERROR: MINT_EDITION must be xfce, mate, or cinnamon." >&2; exit 2 ;;
+esac
+MINT_ISO="linuxmint-${MINT_VERSION}-${MINT_EDITION}-64bit.iso"
 MIRROR="${MINT_MIRROR:-https://pub.linuxmint.io/stable/${MINT_VERSION}}"
 ROOT="${GITHUB_WORKSPACE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-WORK="${ROOT}/build"
+WORK="${ROOT}/build/${MINT_EDITION}"
 SOURCE="${WORK}/${MINT_ISO}"
 ISO_TREE="${WORK}/iso"
 SQUASH_ROOT="${WORK}/squashfs-root"
-OUTPUT="${ROOT}/dist/exp-mint-${MINT_VERSION}-xfce-amd64.iso"
+OUTPUT="${ROOT}/dist/exp-mint-${MINT_VERSION}-${MINT_EDITION}-amd64.iso"
 
 if [[ ${EUID} -ne 0 ]]; then
   echo "Run this script as root." >&2
