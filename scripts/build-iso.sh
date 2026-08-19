@@ -61,12 +61,26 @@ convert "${ROOT}/assets/exp-mint-wallpaper.png" -resize '1280x720^' \
 convert "${ROOT}/assets/exp-mint-wallpaper.png" -resize '1024x768^' -gravity center -extent 1024x768 \
   "${SQUASH_ROOT}/boot/grub/themes/exp-mint/background.png"
 convert -size 8x36 xc:'#69e6a4' "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_c.png"
-cp "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_c.png" "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_w.png"
-cp "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_c.png" "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_e.png"
+for part in n s e w ne nw se sw; do
+  cp "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_c.png" \
+    "${SQUASH_ROOT}/boot/grub/themes/exp-mint/select_${part}.png"
+done
 chmod +x "${SQUASH_ROOT}/etc/skel/Desktop/exp-mint-installer.desktop"
+chmod +x "${SQUASH_ROOT}/usr/local/bin/exp-mint-apply-branding"
 
 cp -a "${SQUASH_ROOT}/boot/grub/themes/exp-mint" "${ISO_TREE}/boot/grub/themes/"
 cp "${SQUASH_ROOT}/boot/grub/themes/exp-mint/background.png" "${ISO_TREE}/boot/grub/exp-mint-background.png"
+
+# Legacy BIOS boots through ISOLINUX on Mint media, not GRUB. Replace every
+# detected ISOLINUX splash so the E5410 gets EXP Mint branding as well.
+if [[ -d "${ISO_TREE}/isolinux" ]]; then
+  convert "${ROOT}/assets/exp-mint-wallpaper.png" -resize '640x480^' \
+    -gravity center -extent 640x480 "${WORK}/isolinux-splash.png"
+  while IFS= read -r splash; do
+    cp "${WORK}/isolinux-splash.png" "${splash}"
+  done < <(find "${ISO_TREE}/isolinux" -maxdepth 2 -type f \
+    \( -iname 'splash.png' -o -iname 'background.png' \))
+fi
 
 # Give both live-boot GRUB configurations the theme without changing their menu entries.
 while IFS= read -r cfg; do
@@ -113,6 +127,19 @@ else
 fi
 chroot "${SQUASH_ROOT}" update-initramfs -u -k all
 chroot "${SQUASH_ROOT}" update-grub || true
+
+# The live USB loads initrd from ISO/casper, not squashfs-root/boot. Copy the
+# newly branded initramfs back to every initrd filename shipped by Mint.
+BRANDED_INITRD="$(find "${SQUASH_ROOT}/boot" -maxdepth 1 -type f \
+  -name 'initrd.img-*' -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)"
+if [[ -z "${BRANDED_INITRD}" || ! -s "${BRANDED_INITRD}" ]]; then
+  echo "ERROR: update-initramfs did not produce a branded initrd." >&2
+  exit 1
+fi
+while IFS= read -r live_initrd; do
+  cp "${BRANDED_INITRD}" "${live_initrd}"
+done < <(find "${ISO_TREE}/casper" -maxdepth 1 -type f -name 'initrd*')
+
 chroot "${SQUASH_ROOT}" apt-get clean
 rm -rf "${SQUASH_ROOT}/var/lib/apt/lists/"*
 cleanup

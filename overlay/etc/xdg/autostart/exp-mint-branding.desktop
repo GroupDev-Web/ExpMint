@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=EXP Mint Desktop Branding
+Comment=Apply the EXP Mint live and installed desktop appearance
+Exec=/usr/local/bin/exp-mint-apply-branding
+OnlyShowIn=XFCE;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
