@@ -1,30 +1,30 @@
-name: Build EXP Mint ISO
-
+name: Build EXP Mint editions
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    tags: ['v*']
     paths:
       - '.github/workflows/build.yml'
       - 'assets/**'
+      - 'calamares/**'
       - 'overlay/**'
       - 'scripts/**'
-
 permissions:
   contents: write
-
 concurrency:
   group: exp-mint-iso-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   build:
+    name: Build ${{ matrix.edition }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [xfce, mate, cinnamon]
     steps:
       - uses: actions/checkout@v4
-
       - name: Free runner disk space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -35,32 +35,52 @@ jobs:
           large-packages: false
           docker-images: true
           swap-storage: false
-
       - name: Install ISO tooling
         run: |
           sudo apt-get update
           sudo apt-get install -y curl xorriso squashfs-tools rsync imagemagick \
-            librsvg2-bin grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common mtools
-
-      - name: Build EXP Mint
-        run: sudo --preserve-env=GITHUB_WORKSPACE ./scripts/build-iso.sh
-
-      - name: Upload ISO
+            librsvg2-bin grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common mtools zip
+      - name: Build EXP Mint ${{ matrix.edition }}
+        env:
+          MINT_EDITION: ${{ matrix.edition }}
+        run: sudo --preserve-env=GITHUB_WORKSPACE,MINT_EDITION ./scripts/build-iso.sh
+      - name: Package individual ZIP
+        env:
+          MINT_EDITION: ${{ matrix.edition }}
+        run: |
+          cd dist
+          zip -0 "exp-mint-22.3-${MINT_EDITION}-amd64.zip" \
+            "exp-mint-22.3-${MINT_EDITION}-amd64.iso" \
+            "exp-mint-22.3-${MINT_EDITION}-amd64.iso.sha256"
+      - name: Upload edition ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: exp-mint-22.3-xfce-amd64
-          path: |
-            dist/*.iso
-            dist/*.sha256
+          name: exp-mint-22.3-${{ matrix.edition }}-amd64
+          path: dist/exp-mint-22.3-${{ matrix.edition }}-amd64.zip
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
-
-      - name: Publish tagged release
-        if: startsWith(github.ref, 'refs/tags/v')
+  publish-latest:
+    name: Publish latest downloads
+    needs: build
+    runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Download all edition ZIPs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: exp-mint-22.3-*-amd64
+          path: release
+          merge-multiple: true
+      - name: Update rolling latest release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/*.iso
-            dist/*.sha256
-          generate_release_notes: true
+          tag_name: latest
+          name: EXP Mint Latest Builds
+          body: |
+            Automatically built x86_64 images for XFCE, MATE, and Cinnamon.
+            These files are replaced whenever the main branch builds successfully.
+          prerelease: false
+          make_latest: true
+          files: release/*.zip
+          fail_on_unmatched_files: true
