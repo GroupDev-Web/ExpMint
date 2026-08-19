@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
 set -u
-
 WALLPAPER=/usr/share/backgrounds/exp-mint/exp-mint.png
-
-# XFCE uses the physical monitor connector in property names. Apply the image
-# to every existing workspace instead of assuming the connector is monitor0.
-for attempt in 1 2 3 4 5; do
-  mapfile -t properties < <(
-    xfconf-query -c xfce4-desktop -l 2>/dev/null | \
-      grep -E '/(last-image|image-path)$' || true
-  )
-
-  if ((${#properties[@]})); then
-    for property in "${properties[@]}"; do
-      xfconf-query -c xfce4-desktop -p "${property}" -s "${WALLPAPER}" 2>/dev/null || true
+URI="file://${WALLPAPER}"
+case "${XDG_CURRENT_DESKTOP:-}" in
+  *Cinnamon*)
+    gsettings set org.cinnamon.desktop.background picture-uri "$URI" 2>/dev/null || true
+    gsettings set org.cinnamon.desktop.background picture-options zoom 2>/dev/null || true
+    ;;
+  *MATE*)
+    gsettings set org.mate.background picture-filename "$WALLPAPER" 2>/dev/null || true
+    gsettings set org.mate.background picture-options zoom 2>/dev/null || true
+    ;;
+  *)
+    for attempt in 1 2 3 4 5; do
+      mapfile -t properties < <(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep -E '/(last-image|image-path)$' || true)
+      if ((${#properties[@]})); then
+        for property in "${properties[@]}"; do
+          xfconf-query -c xfce4-desktop -p "$property" -s "$WALLPAPER" 2>/dev/null || true
+        done
+        xfdesktop --reload >/dev/null 2>&1 || true
+        exit 0
+      fi
+      sleep 2
     done
+    xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -n -t string -s "$WALLPAPER" 2>/dev/null || true
     xfdesktop --reload >/dev/null 2>&1 || true
-    exit 0
-  fi
-
-  sleep 2
-done
-
-# Fallback for a newly-created XFCE profile with no backdrop keys yet.
-xfconf-query -c xfce4-desktop \
-  -p /backdrop/screen0/monitor0/workspace0/last-image \
-  -n -t string -s "${WALLPAPER}" 2>/dev/null || true
-xfdesktop --reload >/dev/null 2>&1 || true
+    ;;
+esac
