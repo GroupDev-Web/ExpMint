@@ -100,7 +100,18 @@ find "${SQUASH_ROOT}/usr/share/applications" "${SQUASH_ROOT}/etc/skel/Desktop" \
     fi
   done
 
-chroot "${SQUASH_ROOT}" plymouth-set-default-theme -R exp-mint
+# Mint's live image does not always ship the plymouth-set-default-theme helper.
+# Register the theme directly, then rebuild every installed initramfs.
+if chroot "${SQUASH_ROOT}" sh -c 'command -v plymouth-set-default-theme >/dev/null'; then
+  chroot "${SQUASH_ROOT}" plymouth-set-default-theme exp-mint
+else
+  chroot "${SQUASH_ROOT}" update-alternatives --install \
+    /usr/share/plymouth/themes/default.plymouth default.plymouth \
+    /usr/share/plymouth/themes/exp-mint/exp-mint.plymouth 200
+  chroot "${SQUASH_ROOT}" update-alternatives --set default.plymouth \
+    /usr/share/plymouth/themes/exp-mint/exp-mint.plymouth
+fi
+chroot "${SQUASH_ROOT}" update-initramfs -u -k all
 chroot "${SQUASH_ROOT}" update-grub || true
 chroot "${SQUASH_ROOT}" apt-get clean
 rm -rf "${SQUASH_ROOT}/var/lib/apt/lists/"*
