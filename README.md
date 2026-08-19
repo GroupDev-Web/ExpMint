@@ -1,42 +1,37 @@
 # EXP Mint
 
-EXP Mint is an x86_64 Linux Mint 22.3 XFCE remix designed for older laptops, with the Dell Latitude E5410 as its reference machine.
+EXP Mint is an x86_64 Linux Mint 22.3 remix with **XFCE, MATE, and Cinnamon** editions. XFCE is recommended for the Dell Latitude E5410 and other older laptops.
 
-It keeps the standard Linux Mint installer and repositories while adding:
+It adds an original wallpaper, animated Plymouth branding, matching GRUB and legacy boot artwork, a custom Calamares installer, and automated GitHub Actions builds.
 
-- an original EXP Mint wallpaper and visual identity;
-- matching Plymouth and GRUB themes;
-- legacy BIOS and UEFI boot support;
-- conservative Intel graphics defaults;
-- XFCE compositing disabled by default for lower GPU/RAM use;
-- a reproducible GitHub Actions ISO build.
+## Download
+
+The **latest** release contains one ZIP per desktop:
+
+- `exp-mint-22.3-xfce-amd64.zip`
+- `exp-mint-22.3-mate-amd64.zip`
+- `exp-mint-22.3-cinnamon-amd64.zip`
+
+Each ZIP contains the ISO and SHA-256 checksum. The rolling [latest GitHub release](https://github.com/GroupDev-Web/ExpMint/releases/tag/latest) refreshes after every successful main-branch build.
 
 ## Build in GitHub Actions
 
-Open **Actions → Build EXP Mint ISO → Run workflow**. The completed workflow publishes:
+Open **Actions → Build EXP Mint editions → Run workflow**. All three editions build independently; after all succeed, the workflow updates the `latest` release and its three ZIP assets.
 
-- `exp-mint-22.3-xfce-amd64.iso`
-- `exp-mint-22.3-xfce-amd64.iso.sha256`
+## Build one edition locally
 
-as a workflow artifact. Tagged builds also attach both files to a GitHub release.
-
-## Build locally
-
-Use an Ubuntu 24.04 x86_64 machine with at least 15 GB free disk space:
+On Ubuntu 24.04 x86_64 with at least 15 GB free:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y curl xorriso squashfs-tools rsync imagemagick grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common mtools
-sudo ./scripts/build-iso.sh
+sudo apt-get install -y curl xorriso squashfs-tools rsync imagemagick librsvg2-bin grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common mtools zip
+sudo MINT_EDITION=xfce ./scripts/build-iso.sh
 ```
 
-The output is written to `dist/`.
+Use `mate` or `cinnamon` for the other editions. Output is written to `dist/`.
 
-## E5410 notes
+## Dell Latitude E5410
 
-- Use the regular (non-HWE) base selected by the workflow.
-- The ISO supports the laptop's legacy BIOS boot path.
-- If the machine has only 2 GB RAM, install first and avoid running many live-session apps at once.
-- Write the ISO in raw/DD mode. In Linux: `sudo dd if=exp-mint-22.3-xfce-amd64.iso of=/dev/sdX bs=4M status=progress oflag=sync`.
+Use XFCE for the lowest resource use. The ISO supports legacy BIOS and UEFI boot. Test Wi-Fi, audio, graphics, and sleep in the live session before installing, and write the ISO in raw/DD mode.
 
 EXP Mint is an unofficial community remix and is not affiliated with the Linux Mint project.
