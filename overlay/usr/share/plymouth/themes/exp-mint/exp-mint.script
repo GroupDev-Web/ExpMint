@@ -4,16 +4,22 @@ Window.SetBackgroundBottomColor(0.01, 0.018, 0.016);
 logo.image = Image("logo.png");
 logo.sprite = Sprite(logo.image);
 logo.sprite.SetX(Window.GetWidth() / 2 - logo.image.GetWidth() / 2);
-logo.sprite.SetY(Window.GetHeight() / 2 - logo.image.GetHeight() / 2 - 18);
+logo.sprite.SetY(Window.GetHeight() / 2 - 205);
+
+resales.image = Image("resales-logo.png");
+resales.sprite = Sprite(resales.image);
+resales.sprite.SetX(Window.GetWidth() / 2 - resales.image.GetWidth() / 2);
+resales.sprite.SetY(Window.GetHeight() / 2 + 20);
+
+spinner.image = Image("spinner.png");
+spinner.sprite = Sprite(spinner.image);
+spinner.sprite.SetX(Window.GetWidth() / 2 - spinner.image.GetWidth() / 2);
+spinner.sprite.SetY(Window.GetHeight() / 2 + 125);
+spinner.angle = 0;
 
 fun refresh_callback () {
-  progress = Plymouth.GetBootProgress();
-  width = Math.Int(Window.GetWidth() * 0.22 * progress);
-  bar.image = Image.Text("────────────────", 0.22, 0.86, 0.55);
-  bar.sprite = Sprite(bar.image);
-  bar.sprite.SetX(Window.GetWidth() / 2 - bar.image.GetWidth() / 2);
-  bar.sprite.SetY(Window.GetHeight() / 2 + 125);
-  bar.sprite.SetOpacity(0.35 + progress * 0.65);
+  spinner.angle = spinner.angle + 0.10;
+  spinner.sprite.SetImage(spinner.image.Rotate(spinner.angle));
 }
 
 Plymouth.SetRefreshFunction(refresh_callback);

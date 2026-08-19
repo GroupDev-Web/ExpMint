@@ -53,6 +53,11 @@ install -Dm0644 "${ROOT}/assets/exp-mint-mark.svg" \
 
 convert -background none "${ROOT}/assets/exp-mint-mark.svg" -resize 210x210 \
   "${SQUASH_ROOT}/usr/share/plymouth/themes/exp-mint/logo.png"
+convert -background none "${ROOT}/assets/exp-resales-logo.svg" -resize 330x83 \
+  "${SQUASH_ROOT}/usr/share/plymouth/themes/exp-mint/resales-logo.png"
+convert -size 72x72 xc:none -stroke '#9fffd0' -strokewidth 7 -fill none \
+  -draw 'arc 8,8 64,64 18,315' \
+  "${SQUASH_ROOT}/usr/share/plymouth/themes/exp-mint/spinner.png"
 convert -background none "${ROOT}/assets/exp-mint-mark.svg" -resize 256x256 \
   "${SQUASH_ROOT}/etc/calamares/branding/exp-mint/exp-mint-logo.png"
 convert "${ROOT}/assets/exp-mint-wallpaper.png" -resize '1280x720^' \
@@ -96,20 +101,21 @@ chroot "${SQUASH_ROOT}" apt-get update
 chroot "${SQUASH_ROOT}" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
   apt-get install -y --no-install-recommends calamares calamares-settings-lubuntu
 
-# Keep Ubuntu's maintained Noble installer module wiring, but use EXP Mint's
-# identity and artwork. This avoids fragile hand-written partition recipes.
-if [[ -f "${SQUASH_ROOT}/etc/calamares/settings.conf" ]]; then
-  sed -Ei 's/^([[:space:]]*branding:[[:space:]]*).*/\1exp-mint/' \
-    "${SQUASH_ROOT}/etc/calamares/settings.conf"
-else
-  echo "ERROR: Calamares installed without /etc/calamares/settings.conf." >&2
-  exit 1
-fi
+# Retain Ubuntu's maintained module files, but replace Lubuntu's top-level
+# sequence and partition labels with EXP Mint-specific configuration.
+install -Dm0644 "${ROOT}/calamares/settings.conf" \
+  "${SQUASH_ROOT}/etc/calamares/settings.conf"
+install -Dm0644 "${ROOT}/calamares/partition.conf" \
+  "${SQUASH_ROOT}/etc/calamares/modules/partition.conf"
 
-# Remove the old Linux Mint live-installer launchers so there is one clear path.
+# Remove Mint and Lubuntu launchers so there is one clear installer entry.
+rm -f \
+  "${SQUASH_ROOT}/usr/share/applications/lubuntu-calamares.desktop" \
+  "${SQUASH_ROOT}/usr/share/applications/calamares-launch-oem.desktop"
+rm -rf "${SQUASH_ROOT}/etc/calamares/branding/lubuntu"
 find "${SQUASH_ROOT}/usr/share/applications" "${SQUASH_ROOT}/etc/skel/Desktop" \
   -type f -name '*.desktop' -print0 2>/dev/null | while IFS= read -r -d '' desktop; do
-    if grep -Eqi '(^Name=.*Install Linux Mint|live-installer|ubiquity)' "${desktop}"; then
+    if grep -Eqi '(^Name=.*Install (Linux Mint|Lubuntu)|live-installer|ubiquity|lubuntu-calamares)' "${desktop}"; then
       rm -f "${desktop}"
     fi
   done
