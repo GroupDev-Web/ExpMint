@@ -4,6 +4,6 @@ Version=1.0
 Name=EXP Mint Desktop Branding
 Comment=Apply the EXP Mint live and installed desktop appearance
 Exec=/usr/local/bin/exp-mint-apply-branding
-OnlyShowIn=XFCE;
+OnlyShowIn=XFCE;MATE;X-Cinnamon;
 NoDisplay=true
 X-GNOME-Autostart-enabled=true
