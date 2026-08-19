@@ -26,6 +26,11 @@ trap cleanup EXIT
 rm -rf "${WORK}" "${ROOT}/dist"
 mkdir -p "${WORK}" "${ISO_TREE}" "${ROOT}/dist"
 
+if ! identify "${ROOT}/assets/exp-mint-wallpaper.png" >/dev/null 2>&1; then
+  echo "ERROR: assets/exp-mint-wallpaper.png is not a valid readable image." >&2
+  exit 1
+fi
+
 curl --fail --location --retry 5 -o "${SOURCE}" "${MIRROR}/${MINT_ISO}"
 curl --fail --location --retry 5 -o "${WORK}/sha256sum.txt" "${MIRROR}/sha256sum.txt"
 if ! awk -v iso="${MINT_ISO}" '$2 == iso || $2 == "*" iso { print }' \
