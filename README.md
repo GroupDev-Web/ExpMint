@@ -6,17 +6,17 @@ It adds an original wallpaper, animated Plymouth branding, matching GRUB and leg
 
 ## Download
 
-The **latest** release contains one ZIP per desktop:
+GitHub Actions publishes one ZIP artifact per desktop:
 
 - `exp-mint-22.3-xfce-amd64.zip`
 - `exp-mint-22.3-mate-amd64.zip`
 - `exp-mint-22.3-cinnamon-amd64.zip`
 
-Each ZIP contains the ISO and SHA-256 checksum. The rolling [latest GitHub release](https://github.com/GroupDev-Web/ExpMint/releases/tag/latest) refreshes after every successful main-branch build.
+Each artifact ZIP contains the ISO and SHA-256 checksum. The download site points to the newest successful artifacts from the `main` branch.
 
 ## Build in GitHub Actions
 
-Open **Actions → Build EXP Mint editions → Run workflow**. All three editions build independently; after all succeed, the workflow updates the `latest` release and its three ZIP assets.
+Open **Actions → Build EXP Mint editions → Run workflow**. All three editions build independently and appear as separate workflow artifacts.
 
 ## Build one edition locally
 
